@@ -58,11 +58,11 @@ string multiply(string num1, string num2)
 } 
 
 // Bitwise squaring
-int square(int n){
+long long square(int n){
 	// Set a temporary value
-	int temp = n;
-	int res = 0;
-	int count = 0;
+	long long temp = n;
+	long long res = 0;
+	long long count = 0;
 
 	while(temp > 0){
 		// Check if number is odd
