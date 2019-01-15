@@ -1,0 +1,422 @@
+#include<iostream>
+#include<stack>
+#include<string>
+#include<fstream>
+#include<queue>
+
+using namespace std;
+
+//My user defined data type for storing information
+struct check
+{
+	vector<char>vec;
+};
+
+//Datatype given by homework, capacitiy is added additionally
+struct lectureNode
+{
+	int capacity;
+	string lectureName;
+	lectureNode *next;
+
+	lectureNode(int Tcapacity=0, string name="", lectureNode* ptr=nullptr)
+	{
+		capacity=Tcapacity;
+		lectureName = name;
+		next = ptr;
+	}
+};
+
+struct Student{
+	string name;
+	string id;
+	lectureNode *lectures;
+
+	Student(string n="", string i="0", lectureNode *ptr = NULL)
+	{
+		name = n;
+		id = i;
+		lectures = ptr;
+	}
+
+};
+
+// Bool function that parses given XML files and checks if they are correct or not. It returns  queue of students by reference
+// and returns the head of the lecture linkedlist.
+bool XMLchecker(queue<Student> & sInfo, lectureNode *LHead, bool & checkeri1, bool & checkeri2)
+{
+	// Defining objects, stacks and *lecture to not to loose LHead.
+	lectureNode *lecture=LHead;
+	stack<check>s;
+	stack<check>s2;
+	stack<check>s3;
+	ifstream file, file2;
+	string fileName, fileName2, word;
+	char c;
+	bool checker=false;
+
+	//Taking input from user and checking wether if it is given correctly or not.
+	cout<<"Please enter the name of the Student XML file: ";
+	//Means cout statement is prompted.
+	checkeri1=false;
+	cin>>fileName2;
+	file2.open(fileName2.c_str());
+	//Checking if file is opened correctly.
+	while(file2.fail())
+	{
+		cout<<"Invalid file."<<"\n";
+		cout<<"Please enter the name of the Student XML file: ";
+		cin>>fileName2;
+		file2.open(fileName2.c_str());
+	}
+
+	//Starting to parse XML file for student, file2.
+	while(file2>>c)
+	{
+		//Checking beginning of the file, checker is falseby default.
+		if(c=='<' || checker)
+		{
+			if(!checker)
+				file2>>c;
+			vector<char>temp;
+			while(c!='>')
+			{
+				temp.push_back(c);
+				file2>>c; 
+			}
+			// Storing characters into vectors, and pushing vectors into stacks,s2.
+			check che;
+			che.vec=temp;
+			s2.push(che);
+			checker=false;
+		}
+		// Parsing latter of the XML file.
+		else
+		{
+			vector<char>temp;
+			while(c!='<')
+			{
+				temp.push_back(c);
+				file2>>c;
+			}
+			check che;
+			che.vec=temp;
+			//Pushing vectors into stack again.
+			s2.push(che);
+			checker=true;
+		}
+	}
+	// Reversing the stack to get the names first.
+	while(!s2.empty())
+	{
+		s3.push(s2.top());
+		s2.pop();
+	}
+	int counter2=0;
+	checker=false;
+	bool checker2=true, checker3=true;
+	Student iStudent;
+	while(!s3.empty())
+	{
+		// Depending in the int counter, if given XML file is given wrong function returns false.
+		checker3=true;
+		string temp;
+		//Traversomg vector at top of the stack.
+		//This for loops merges characters into strings.
+		for(char x:(s3.top()).vec)
+			temp+=x;
+		if(counter2==0 && temp!="student")
+		{
+			return false;
+		}
+		else if(counter2==1 && temp!="name")
+		{
+			return false;
+		}
+		else if(counter2==2 && temp!="")
+		{
+			//Storing the name
+			iStudent.name=temp;
+		}
+		else if(counter2==3 && temp!="/name")
+		{
+			return false;
+		}
+		else if(counter2==4 && temp!="id")
+		{
+			return false;
+		}
+		else if(counter2==5 && temp!="")
+		{
+			//Storing the id
+			iStudent.id=temp;
+		}
+		else if(counter2==6 && temp!="/id")
+		{
+			return false;
+		}
+		else if(temp=="/id")
+			checker=true;
+		// After /id this function is executed. Looping the lectures lecturename /lecture
+		if(checker)
+		{
+			//In this function all the lectures at nodes of the Student are connected as lectureNode.
+			lectureNode *tStudent=new lectureNode();
+			iStudent.lectures=tStudent;
+			//checker2 indicates there is still need to add to linked list.
+			while(checker2)
+			{
+				//checker3 means if it is the first execution or not.
+				if(checker3)
+				{
+					s3.pop();
+					temp="";
+					for(char x:(s3.top()).vec)
+						temp+=x;
+				}
+				//Doing further parsing checks.
+				if(temp!="lecture")
+					return false;
+				//popping top of the stack
+				s3.pop();
+				//Initilaze temp string.
+				temp="";
+				for(char x:(s3.top()).vec)
+					temp+=x;
+				// Adding and advancing nodes.
+				(*tStudent).lectureName=temp;
+				(*tStudent).next=new lectureNode();
+				tStudent=(*tStudent).next;
+				s3.pop();
+				temp="";
+				// Getting further inputs and doing their checks.
+				for(char x:(s3.top()).vec)
+					temp+=x;
+				if(temp!="/lecture")
+					return false;
+				counter2=-1;
+				checker=false;
+				s3.pop();
+				temp="";
+				for(char x:(s3.top()).vec)
+					temp+=x;
+				//If checker2 is false it means it is the end of lecture cycle.
+				if(temp!="lecture")
+					checker2=false;
+				checker3=false;
+			}
+			//Adding to queue.
+			sInfo.push(iStudent);
+		}
+		if(temp!="/student" && checker3==false)
+			return false;
+		counter2++;
+		checker2=true;
+		//Popping the top of the stack.
+		s3.pop();
+	}
+
+	// Same things we did before with slight differences
+	cout<<"Please enter the name of the Lectures XML file: ";
+	checkeri2=false;
+	cin>>fileName;
+	file.open(fileName.c_str());
+	while(file.fail())
+	{
+		cout<<"Invalid file."<<"\n";
+		cout<<"Please enter the name of the Student XML file: ";
+		cin>>fileName;
+		file.open(fileName.c_str());
+	}
+
+	//Parsinig  XML files
+	checker=false;
+	while(file>>c)
+	{
+		if(c=='<' || checker)
+		{
+			if(!checker)
+				file>>c;
+			vector<char>temp;
+			while(c!='>')
+			{
+				temp.push_back(c);
+				file>>c; 
+			}
+			check che;
+			che.vec=temp;
+			s.push(che);
+			checker=false;
+		}
+		else
+		{
+			vector<char>temp;
+			while(c!='<')
+			{
+				temp.push_back(c);
+				file>>c;
+			}
+			check che;
+			che.vec=temp;
+			s.push(che);
+			checker=true;
+		}
+	}
+	int counter=1;
+	while(!s.empty())
+	{
+		//Doing inputchecks by mod8. Since we know it will repeat itself at every 8 input, we do not need additional while loop.
+		string temp;
+		for(char x:(s.top()).vec)
+			temp+=x;
+		if(counter%8==1 && temp!="/lecture")
+		{
+			return false;
+		}
+		else if(counter%8==2 && temp!="/capacity")
+		{
+			return false;
+		}
+		else if(counter%8==3 && temp!="")
+		{
+			//Storing capacity.
+			(*lecture).capacity=stoi(temp);
+		}
+		else if(counter%8==4 && temp!="capacity")
+		{
+			return false;
+		}
+		else if(counter%8==5 && temp!="/name")
+		{
+			return false;
+		}
+		else if(counter%8==6 && temp!="")
+		{
+			//Storing lecturename.
+			(*lecture).lectureName=temp;
+		}
+		else if(counter%8==7 && temp!="name")
+		{
+			return false;
+		}
+		else if(counter%8==0 && temp!="lecture")
+		{
+			return false;
+		}
+		if(counter%8==0)
+		{
+			(*lecture).next=new lectureNode();
+			lecture=(*lecture).next;
+		}
+		counter++;
+		s.pop();
+	}
+	return true;
+}
+
+int main()
+{
+	lectureNode *LHead=new lectureNode();
+	queue<Student> sInfo;
+	bool checkeri1=true, checkeri2=true;
+	string empty;
+	vector<string>p1; vector<string>p2;
+	int counter=0;
+	//If given XML file is given correctly, this function is executed.
+	if(XMLchecker(sInfo, LHead, checkeri1, checkeri2))
+	{
+		string course, id, name;
+		Student obj;
+		while(sInfo.size()!=0)
+		{
+			//Taking the objects from queue.
+			lectureNode lec;
+			obj=sInfo.front();
+			name=obj.name;
+			id=obj.id;
+			// As long as there is room for advance, this while loop will executed.
+			while((*obj.lectures).next!=nullptr)
+			{
+				// Not to loose head.
+				lectureNode *temp=LHead;
+				// Finding the required course at the lecture linked list, and (*temp).next should not be nullptr
+				// Incase the course does not exist, you try to access memory does not exist.
+				while((*temp).lectureName!=(*obj.lectures).lectureName && (*temp).next!=nullptr)
+				{
+					temp=(*temp).next;
+				}
+				//If there is still room for course, capacity is updated and added to p1 vector to print later.
+				if((*temp).capacity!=0)
+				{
+					int cap=(*temp).capacity;
+					cap--;
+					(*temp).capacity=cap;
+					if(counter==0)
+						p1.push_back((*obj.lectures).lectureName+" "+"is assigned to"+" "+name+"("+id+")");
+					else if(counter==1)
+						p2.push_back((*obj.lectures).lectureName+" "+"is assigned to"+" "+name+"("+id+")");
+				}
+				//if capacity is full taking to p1 vector for further execution.
+				else
+				{
+					if(counter==0)
+						p1.push_back((*obj.lectures).lectureName+" "+"can not be assigned to"+" "+name+"("+id+")");
+					else if(counter==1)
+						p2.push_back((*obj.lectures).lectureName+" "+"can not be assigned to"+" "+name+"("+id+")");
+				}
+				//Updating linkedlist.
+				obj.lectures=(*obj.lectures).next;
+			}
+			counter++;
+			//Popping queue.
+			sInfo.pop();
+		}
+		counter=0;
+		//Printing p1 and p2. if p1 is less then p2, as their initilization they should be printed at the same order.
+		if(p1.size()<=p2.size())
+		{
+			while(counter<p1.size())
+			{
+				cout<<p1[counter]<<"\n";
+				cout<<p2[counter]<<"\n";
+				counter++;
+			}
+			while(counter<p2.size())
+			{
+				cout<<p2[counter]<<"\n";
+				counter++;
+			}
+		}
+		counter=0;
+		//Just the reverse case.
+		if(p1.size()>p2.size())
+		{
+			while(counter<p2.size())
+			{
+				cout<<p1[counter]<<"\n";
+				cout<<p2[counter]<<"\n";
+				counter++;
+			}
+			while(counter<p1.size())
+			{
+				cout<<p1[counter]<<"\n";
+				counter++;
+			}
+		}
+	}
+	else
+	{
+		//If given XML file is not correct, error message is prompted.
+		if(checkeri1==false && checkeri2)
+		{
+			cout<<"Please enter the name of the Lectures XML file: ";
+			cin>>empty;
+			cout<<"Invalid XML format!.. Exiting."<<"\n";
+		}
+		else
+		{
+			cout<<"Invalid XML format!.. Exiting."<<"\n";
+		}
+	}
+	return 0;
+}
