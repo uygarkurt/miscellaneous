@@ -1,0 +1,246 @@
+#include <stdio.h>
+#include<stdlib.h>
+#include<dirent.h>
+#include <sys/stat.h> 
+#include <sys/types.h> 
+#include <bits/stdc++.h>
+#include <unistd.h>
+#include <string.h>
+/*
+    Print all files and folders in the current working directory,
+*/
+void ls(){ 
+    char c_arr[100][100];
+    struct dirent *p_de;
+    DIR *p_dr=opendir(".");
+    (p_de=readdir(p_dr));
+    (p_de=readdir(p_dr));
+    int i=0;
+    while((p_de=readdir(p_dr))!=NULL)
+    {
+        strcpy(c_arr[i], p_de->d_name);
+        i+=1;
+    }
+    //printf("%s ", p_de->d_name);
+    for(int i2=0; i2<i-1; i2++)
+    {
+        printf("%s ",c_arr[i2]);
+    }
+    printf("%s\n", c_arr[i-1]);
+    closedir(p_dr);
+}
+
+
+/*
+    Make a new directory called 'name'.
+*/
+void makedir(char* name){
+  int i=0, i2=0;
+  char arg1[100], arg2[100];
+  bool checker=true;
+  while(name[i]!='\0')
+  {
+    if(checker)
+    {
+        if(name[i]==' ')
+        {
+            checker=false;
+            arg1[i]='\0';
+            while(name[i]==' ' && !checker)
+                i+=1;  
+        }
+        else
+        {
+            arg1[i]=name[i];
+        }
+    }
+    else
+    {   
+        if(i2==0)
+            i-=1;
+        arg2[i2]=name[i];
+        i2+=1;
+    }
+    i+=1;
+  }
+  if(checker)
+  {
+    arg1[i]=='\0';
+  }
+  i2-=1;
+  arg2[i2]='\0';
+  
+  mkdir(arg2, 0777);
+}
+
+/*
+    Remove a directory called 'name'.
+*/
+void removedir(char* name){
+  int i=0, i2=0;
+  char arg1[100], arg2[100];
+  bool checker=true;
+  while(name[i]!='\0')
+  {
+    if(checker)
+    {
+        if(name[i]==' ')
+        {
+            checker=false;
+            arg1[i]='\0';
+            while(name[i]==' ' && !checker)
+                i+=1;  
+        }
+        else
+        {
+            arg1[i]=name[i];
+        }
+    }
+    else
+    {   
+        if(i2==0)
+            i-=1;
+        arg2[i2]=name[i];
+        i2+=1;
+    }
+    i+=1;
+  }
+  if(checker)
+  {
+    arg1[i]=='\0';
+  }
+  i2-=1;
+  arg2[i2]='\0';
+  
+  rmdir(arg2);
+}
+
+
+/*
+    Change current working directory to directory 'name'.
+*/
+void changedir(char* name){ 
+  int i=0, i2=0;
+  char arg1[100], arg2[100];
+  bool checker=true;
+  while(name[i]!='\0')
+  {
+    if(checker)
+    {
+        if(name[i]==' ')
+        {
+            checker=false;
+            arg1[i]='\0';
+            while(name[i]==' ' && !checker)
+                i+=1;  
+        }
+        else
+        {
+            arg1[i]=name[i];
+        }
+    }
+    else
+    {   
+        if(i2==0)
+            i-=1;
+        arg2[i2]=name[i];
+        i2+=1;
+    }
+    i+=1;
+  }
+  if(checker)
+  {
+    arg1[i]=='\0';
+  }
+  i2-=1;
+  arg2[i2]='\0';
+  
+  chdir(arg2);
+}
+
+
+/*
+    Get 'command' as an input,
+    and execute proper functionalities according to command line.
+*/
+void shell (char* command){
+    int i=0, i2=0;
+  char arg1[100], arg2[100];
+  bool checker=true, checker2=false;
+  
+  while(command[i]!='\0')
+  {
+    if(command[i]==' ')
+        checker2=true;
+    i+=1;
+  }
+  i=0;
+  if(!checker2)
+  {
+    while(command[i]!='\0')
+    {
+        arg1[i]=command[i];
+        i+=1;
+    }
+    i-=1;
+    arg1[i]='\0';
+  }
+  i=0;
+  while(command[i]!='\0' && checker2)
+  {
+    if(checker)
+    {
+        if(command[i]==' ')
+        {
+            checker=false;
+            arg1[i]='\0';
+            while(command[i]==' ' && !checker)
+                i+=1; 
+        }
+        else
+        {
+            arg1[i]=command[i];
+        }
+    }
+    else
+    {   
+        if(i2==0)
+            i-=1;
+        arg2[i2]=command[i];
+        i2+=1;
+    }
+    i+=1;
+  }
+  /*
+  if(checker)
+  {
+    i-=1;
+    printf("%d\n", i);
+    arg1[i]=='\0';
+  }
+  */
+  //printf("%d\n", i2);
+  i2-=1;
+  arg2[i2]='\0';
+  
+  if(strcmp(arg1, "mkdir")==0)
+  {
+    makedir(command);
+  }
+  else if(strcmp(arg1, "ls")==0)
+  {
+    ls();
+  }
+  else if(strcmp(arg1, "rmdir")==0)
+  {
+    removedir(command);
+  }
+ else if(strcmp(arg1, "cd")==0 && strcmp(arg2, "..")==0)
+ {
+    chdir("..");
+ }
+  else if(strcmp(arg1, "cd")==0)
+ {
+    changedir(command);
+ }
+}
